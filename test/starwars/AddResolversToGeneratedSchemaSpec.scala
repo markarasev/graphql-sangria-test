@@ -7,7 +7,6 @@ import sangria.execution.Executor
 import sangria.macros._
 import sangria.marshalling.playJson._
 import sangria.parser.QueryParser
-import starwars.AddResolversToGeneratedSchema.schema
 import starwars.StarWarsData.Repo
 
 import scala.concurrent.Await
@@ -29,7 +28,7 @@ class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
       val schemaFileAst = QueryParser
         .parse(schemaFileContents)
         .get
-      CompareAst.areEquivalent(schemaFileAst, schema.toAst) shouldBe true
+      CompareAst.areEquivalent(schemaFileAst, schema.toAst)
     }
 
     "be able to query the main hero" in {
@@ -47,8 +46,16 @@ class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
        """
       ) shouldBe Json.parse(
         """
-          |{"data":{"hero":{"name":"R2D2","friends":[{"name":"Luke"}],"appearsIn":["NEWHOPE","EMPIRE","JEDI"]}}}
-        """.stripMargin)
+          |{"data":{"hero":{"name":"R2D2","friends":[
+          |  {
+          |    "name": "Luke"
+          |  },
+          |  {
+          |    "name": "Leïa"
+          |  }
+          |],"appearsIn":["NEWHOPE","EMPIRE","JEDI"]}}}
+        """.stripMargin
+      )
     }
 
     "be able to query the maine hero by episode" in {
@@ -66,9 +73,60 @@ class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
         """
       ) shouldBe Json.parse(
         """
-          |{"data":{"hero":{"name":"Luke","friends":[{"name":"R2D2"}],"appearsIn":["NEWHOPE","EMPIRE","JEDI"]}}}
+          |{"data":{"hero":{"name":"Luke","friends":[
+          |  {
+          |    "name":"R2D2"
+          |  },
+          |  {
+          |    "name": "Leïa"
+          |  }
+          |],"appearsIn":["NEWHOPE","EMPIRE","JEDI"]}}}
         """.stripMargin
       )
+    }
+
+    "be able to query a human by its id" in {
+      runQuery(
+        gql"""
+        {
+          human(id: "2") {
+            name
+            homePlanet
+          }
+        }
+        """
+      ) shouldBe Json.parse("""
+                              |{
+                              |  "data": {
+                              |    "human": {
+                              |      "name": "Luke",
+                              |      "homePlanet": "Tatooine"
+                              |    }
+                              |  }
+                              |}
+                            """.stripMargin)
+    }
+
+    "be able to query a droid by its id" in {
+      runQuery(
+        gql"""
+        {
+          droid(id: "1") {
+            name
+            primaryFunction
+          }
+        }
+        """
+      ) shouldBe Json.parse("""
+                              |{
+                              |  "data": {
+                              |    "droid": {
+                              |      "name": "R2D2",
+                              |      "primaryFunction": "astromech"
+                              |    }
+                              |  }
+                              |}
+                            """.stripMargin)
     }
 
   }

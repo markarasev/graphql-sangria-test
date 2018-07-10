@@ -1,19 +1,20 @@
 package starwars
 
+import org.scalatest.{Assertion, Matchers}
 import sangria.ast._
 
-object CompareAst {
+object CompareAst extends Matchers {
 
-  def areEquivalent(schema1: Document, schema2: Document): Boolean = {
+  def areEquivalent(schema1: Document, schema2: Document): Assertion = {
     val cleanedSchema1 = cleanSchema(schema1)
     val cleanedSchema2 = cleanSchema(schema2)
-    cleanedSchema1 == cleanedSchema2
+    cleanedSchema1 shouldEqual cleanedSchema2
   }
 
   private def cleanSchema(schema: Document): Document =
     schema
       .copy(
-        definitions = schema.definitions.map(cleanDefinition),
+        definitions = schema.definitions.map(cleanDefinition).sortBy(_.getClass.getSimpleName),
         location = None,
         sourceMapper = None
       )
@@ -22,8 +23,10 @@ object CompareAst {
     definition match {
       case otd: ObjectTypeDefinition =>
         otd.copy(
+          interfaces = otd.interfaces.map(cleanNamedType).sortBy(_.name),
           fields = otd.fields.map(cleanFieldDefinition).sortBy(_.name),
           comments = Vector.empty,
+          trailingComments = Vector.empty,
           location = None
         )
       case etd: EnumTypeDefinition =>
@@ -32,8 +35,22 @@ object CompareAst {
           comments = Vector.empty,
           location = None
         )
+      case itd: InterfaceTypeDefinition => itd.copy(
+        fields = itd.fields.map(cleanFieldDefinition).sortBy(_.name),
+        comments = Vector.empty,
+        location = None
+      )
       case x => x
     }
+
+  private def cleanNamedType(namedType: NamedType): NamedType = namedType.copy(location = None)
+
+  private def cleanInterfaceTypeDefinition(interfaceTypeDefinition: InterfaceTypeDefinition): InterfaceTypeDefinition =
+    interfaceTypeDefinition.copy(
+      fields = interfaceTypeDefinition.fields.map(cleanFieldDefinition).sortBy(_.name),
+      comments = Vector.empty,
+      location = None
+    )
 
   private def cleanFieldDefinition(
       fieldDefinition: FieldDefinition

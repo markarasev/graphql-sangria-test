@@ -21,15 +21,26 @@ object AddResolversToStringSchema {
 
     val builder = AstSchemaBuilder.resolverBased[Repo](
       FieldResolver {
-        case (TypeName("Query"), FieldName("hero")) =>
-          ctx =>
-            val episodeO: Option[Episode] = ctx.args
-              .argOpt[String]("episode")
-              .map(Episode.apply)
-            episodeO match {
-              case Some(episode) => ctx.ctx.hero(episode)
-              case None          => ctx.ctx.mainHero
-            }
+        case (TypeName("Query"), FieldName(fn)) =>
+          fn match {
+            case "hero" =>
+              ctx =>
+                val episodeO = ctx.args
+                  .argOpt[String]("episode")
+                  .map(Episode.apply)
+                episodeO match {
+                  case Some(episode) => ctx.ctx.hero(episode)
+                  case None          => ctx.ctx.mainHero
+                }
+            case "human" =>
+              ctx =>
+                val id = ctx.args.arg[String]("id")
+                ctx.ctx.human(id)
+            case "droid" =>
+              ctx =>
+                val id = ctx.args.arg[String]("id")
+                ctx.ctx.droid(id)
+          }
       },
       FieldResolver.defaultInput[Repo, JsValue]
     )
