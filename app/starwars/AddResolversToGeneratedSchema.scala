@@ -3,12 +3,9 @@ package starwars
 import play.api.libs.json.JsValue
 import sangria.macros.derive._
 import sangria.marshalling.playJson._
-import sangria.parser.QueryParser
 import sangria.schema.AstSchemaBuilder.{FieldName, TypeName}
 import sangria.schema._
 import starwars.StarWarsData.{Episode, Repo}
-
-import scala.io.Source
 
 object AddResolversToGeneratedSchema {
 
@@ -52,17 +49,5 @@ object AddResolversToGeneratedSchema {
     val staticSchema = Schema(QueryType)
     Schema.buildFromAst[Repo](staticSchema.toAst, builder)
   }
-
-  private def compareSchemaWithFile(): Unit = {
-    val schemaFileUrl = Thread.currentThread.getContextClassLoader
-      .getResource("starwars.graphql")
-    val schemaFileSource = Source.fromURL(schemaFileUrl)
-    val schemaFileContents = schemaFileSource.mkString
-    val schemaFileAst = QueryParser
-      .parse(schemaFileContents)
-      .get
-    assert(CompareAst.areEquivalent(schemaFileAst, schema.toAst))
-  }
-  compareSchemaWithFile()
 
 }

@@ -6,17 +6,31 @@ import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.macros._
 import sangria.marshalling.playJson._
+import sangria.parser.QueryParser
+import starwars.AddResolversToGeneratedSchema.schema
 import starwars.StarWarsData.Repo
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
+import scala.io.Source
 
 class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
 
   val schema = AddResolversToGeneratedSchema.schema
 
   "The graphql API" should {
+
+    "enforce the file schema" in {
+      val schemaFileUrl = Thread.currentThread.getContextClassLoader
+        .getResource("starwars.graphql")
+      val schemaFileSource = Source.fromURL(schemaFileUrl)
+      val schemaFileContents = schemaFileSource.mkString
+      val schemaFileAst = QueryParser
+        .parse(schemaFileContents)
+        .get
+      CompareAst.areEquivalent(schemaFileAst, schema.toAst) shouldBe true
+    }
 
     "be able to query the main hero" in {
       runQuery(
