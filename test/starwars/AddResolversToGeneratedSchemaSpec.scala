@@ -1,5 +1,6 @@
 package starwars
 
+import astdiff.{CompareAst, Equivalents}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.Json
 import sangria.ast.Document
@@ -7,6 +8,7 @@ import sangria.execution.Executor
 import sangria.macros._
 import sangria.marshalling.playJson._
 import sangria.parser.QueryParser
+import sangria.schema.Schema
 import starwars.StarWarsData.Repo
 
 import scala.concurrent.Await
@@ -16,7 +18,7 @@ import scala.io.Source
 
 class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
 
-  val schema = AddResolversToGeneratedSchema.schema
+  val schema: Schema[Repo, Any] = AddResolversToGeneratedSchema.schema
 
   "The graphql API" should {
 
@@ -28,7 +30,7 @@ class AddResolversToGeneratedSchemaSpec extends WordSpec with Matchers {
       val schemaFileAst = QueryParser
         .parse(schemaFileContents)
         .get
-      CompareAst.areEquivalent(schemaFileAst, schema.toAst)
+      CompareAst.equivalence(schemaFileAst, schema.toAst) shouldBe Equivalents
     }
 
     "be able to query the main hero" in {
